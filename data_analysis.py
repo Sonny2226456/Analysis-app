@@ -1,12 +1,8 @@
 import pandas as pd
 import numpy as np
-from sklearn.linear_model import LinearRegression
-from sklearn.preprocessing import StandardScaler
-from statsmodels.tsa.arima.model import ARIMA
-from statsmodels.tsa.stattools import adfuller
 import warnings
 
-# Suppress statsmodels warnings
+# Suppress warnings
 warnings.filterwarnings("ignore")
 
 def perform_trend_analysis(data, column, date_col=None):
@@ -86,11 +82,21 @@ def perform_trend_analysis(data, column, date_col=None):
             X_valid = X[mask]
             y_valid = y[mask]
             
-            model = LinearRegression()
-            model.fit(X_valid, y_valid)
+            # Simple linear regression implementation
+            # Calculate mean of X and y
+            mean_x = np.mean(X_valid)
+            mean_y = np.mean(y_valid)
+            
+            # Calculate slope
+            numerator = np.sum((X_valid - mean_x) * (y_valid - mean_y))
+            denominator = np.sum((X_valid - mean_x) ** 2)
+            slope = numerator / denominator if denominator != 0 else 0
+            
+            # Calculate intercept
+            intercept = mean_y - slope * mean_x
             
             # Predict for all points
-            trend = model.predict(X)
+            trend = intercept + slope * X
             df[f'{column}_trend'] = trend
         else:
             df[f'{column}_trend'] = np.nan
@@ -145,14 +151,26 @@ def detect_patterns(data, column, date_col=None):
             X_valid = X[mask]
             y_valid = y[mask]
             
-            model = LinearRegression()
-            model.fit(X_valid, y_valid)
+            # Simple linear regression implementation
+            # Calculate mean of X and y
+            mean_x = np.mean(X_valid)
+            mean_y = np.mean(y_valid)
+            
+            # Calculate slope
+            numerator = np.sum((X_valid - mean_x) * (y_valid - mean_y))
+            denominator = np.sum((X_valid - mean_x) ** 2)
+            slope = numerator / denominator if denominator != 0 else 0
+            
+            # Calculate intercept
+            intercept = mean_y - slope * mean_x
+            
+            # Calculate predictions
+            y_pred = intercept + slope * X_valid
             
             # Calculate R-squared
-            r_squared = model.score(X_valid, y_valid)
-            
-            # Determine trend direction
-            slope = model.coef_[0][0]
+            ss_total = np.sum((y_valid - mean_y) ** 2)
+            ss_residual = np.sum((y_valid - y_pred) ** 2)
+            r_squared = 1 - (ss_residual / ss_total) if ss_total != 0 else 0
             
             patterns = {}
             
@@ -164,15 +182,21 @@ def detect_patterns(data, column, date_col=None):
                 else:
                     patterns["Downward Trend"] = confidence
             
-            # Check for mean reversion (stationary series)
-            adf_result = adfuller(series.dropna())
-            adf_pvalue = adf_result[1]
+            # Simple check for potential mean reversion
+            # Calculate the deviation from mean
+            series_std = np.std(series.dropna())
+            series_mean = np.mean(series.dropna())
             
-            if adf_pvalue < 0.05:
-                # Statistically significant evidence for stationarity
-                # Convert p-value to a confidence-like score
-                confidence = (1 - adf_pvalue) * 100
-                patterns["Mean Reversion"] = confidence
+            # Calculate recent deviation from mean
+            recent_data = series.dropna()[-10:]
+            if len(recent_data) > 0:
+                recent_mean = np.mean(recent_data)
+                deviation = abs(recent_mean - series_mean) / series_std if series_std > 0 else 0
+                
+                # If recent data is close to the mean, it might be mean-reverting
+                if deviation < 0.5:  # Arbitrary threshold
+                    confidence = (1 - deviation) * 100
+                    patterns["Mean Reversion"] = confidence
             
             # Detect potential head and shoulders pattern
             # (This is a simplified approach - real pattern detection is complex)
@@ -283,13 +307,13 @@ def predict_future_values(data, column, periods=7, date_col=None):
         # Not enough data for forecasting
         return pd.DataFrame()
     
+    # Use simple exponential smoothing for forecasting
     try:
-        # Try ARIMA model
-        model = ARIMA(series, order=(1, 1, 1))  # Simple ARIMA order
-        model_fit = model.fit()
+        alpha = 0.3  # Smoothing factor
+        smoothed = series.ewm(alpha=alpha, adjust=False).mean()
         
-        # Forecast future values
-        forecast = model_fit.forecast(steps=periods)
+        # Use the last value for all future predictions
+        last_value = smoothed.iloc[-1]
         
         # Create forecast DataFrame
         last_date = series.index[-1]
@@ -298,47 +322,17 @@ def predict_future_values(data, column, periods=7, date_col=None):
         dates = pd.date_range(start=last_date, periods=periods+1, freq=pd.infer_freq(series.index) or 'D')[1:]
         
         # Create DataFrame with forecasted values
-        forecast_df = pd.DataFrame({column: forecast}, index=dates)
+        forecast_df = pd.DataFrame({column: [last_value] * periods}, index=dates)
+        
+        # Add simple confidence intervals (+-10%)
+        forecast_df[f'{column}_lower'] = forecast_df[column] * 0.9
+        forecast_df[f'{column}_upper'] = forecast_df[column] * 1.1
         
         # Ensure index is datetime
         forecast_df.index = pd.to_datetime(forecast_df.index)
         
-        # Add confidence intervals
-        forecast_obj = model_fit.get_forecast(steps=periods)
-        conf_int = forecast_obj.conf_int()
-        
-        forecast_df[f'{column}_lower'] = conf_int.iloc[:, 0].values
-        forecast_df[f'{column}_upper'] = conf_int.iloc[:, 1].values
-        
         return forecast_df
-    
+        
     except Exception as e:
-        # If ARIMA fails, use simpler exponential smoothing
-        try:
-            alpha = 0.3  # Smoothing factor
-            smoothed = series.ewm(alpha=alpha, adjust=False).mean()
-            
-            # Use the last value for all future predictions
-            last_value = smoothed.iloc[-1]
-            
-            # Create forecast DataFrame
-            last_date = series.index[-1]
-            
-            # Generate future dates based on the frequency of the data
-            dates = pd.date_range(start=last_date, periods=periods+1, freq=pd.infer_freq(series.index) or 'D')[1:]
-            
-            # Create DataFrame with forecasted values
-            forecast_df = pd.DataFrame({column: [last_value] * periods}, index=dates)
-            
-            # Add simple confidence intervals (+-10%)
-            forecast_df[f'{column}_lower'] = forecast_df[column] * 0.9
-            forecast_df[f'{column}_upper'] = forecast_df[column] * 1.1
-            
-            # Ensure index is datetime
-            forecast_df.index = pd.to_datetime(forecast_df.index)
-            
-            return forecast_df
-            
-        except Exception as e:
-            # If all else fails, return empty dataframe
-            return pd.DataFrame()
+        # If all else fails, return empty dataframe
+        return pd.DataFrame()
