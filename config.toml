@@ -1,0 +1,10 @@
+[server]
+headless = true
+address = "0.0.0.0"
+port = 5000
+
+[theme]
+primaryColor = "#8B4513"     # Brown - matches button color
+backgroundColor = "#f5f5dc"  # Light hazel
+secondaryBackgroundColor = "#e8e8cc"  # Slightly darker hazel
+textColor = "#3A1F04"        # Dark brown for text
