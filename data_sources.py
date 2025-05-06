@@ -4,7 +4,6 @@ import requests
 import datetime
 import os
 from io import StringIO
-import trafilatura
 import re
 from bs4 import BeautifulSoup
 
@@ -481,41 +480,26 @@ def fetch_crypto_news(coin_id='bitcoin', max_news=5):
     url = f"https://www.coindesk.com/search?s={coin_id}"
     
     try:
-        # Use trafilatura to get clean HTML content
-        downloaded = trafilatura.fetch_url(url)
-        if not downloaded:
+        # Use requests to get the HTML content
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+        response = requests.get(url, headers=headers)
+        if response.status_code != 200:
             return get_demo_crypto_news(coin_id, max_news)
-        
-        # Use BeautifulSoup for more precise parsing
-        soup = BeautifulSoup(downloaded, 'html.parser')
+            
+        # Use BeautifulSoup for parsing
+        soup = BeautifulSoup(response.content, 'html.parser')
         
         # Find all news article elements
-        articles = soup.find_all('article', class_=lambda x: x and ('article' in x.lower() or 'card' in x.lower()))
-        
-        # If no articles found using BeautifulSoup, try with trafilatura's extraction
+        articles = soup.find_all('article') 
+        # If not found, try different selectors
         if not articles:
-            text = trafilatura.extract(downloaded, include_links=True)
-            # Extract article blocks using regex
-            import re
-            article_blocks = re.split(r'\n\s*\n', text)
-            
-            # Create a list of demo news as fallback
-            news_items = []
-            for i, block in enumerate(article_blocks[:max_news]):
-                lines = block.strip().split('\n')
-                if len(lines) >= 2:
-                    title = lines[0]
-                    summary = ' '.join(lines[1:])
-                    # Generate a current date with small random offset
-                    date = datetime.datetime.now() - datetime.timedelta(days=i % 7, hours=i*3)
-                    news_items.append({
-                        'title': title,
-                        'date': date.strftime('%Y-%m-%d'),
-                        'summary': summary,
-                        'url': f"https://www.coindesk.com/{coin_id}-news-{i+1}"
-                    })
-            
-            return news_items[:max_news]
+            articles = soup.find_all('div', class_=lambda x: x and ('article' in str(x).lower() or 'card' in str(x).lower()))
+        
+        # If still no articles found, use demo data
+        if not articles:
+            return get_demo_crypto_news(coin_id, max_news)
         
         # Process the articles found by BeautifulSoup
         news_items = []
