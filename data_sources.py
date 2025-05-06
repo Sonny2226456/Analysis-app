@@ -5,7 +5,6 @@ import datetime
 import os
 from io import StringIO
 import re
-from bs4 import BeautifulSoup
 
 # Function to fetch cryptocurrency data
 def fetch_crypto_data(coin_id='bitcoin', vs_currency='usd', days=30, interval='daily'):
@@ -476,66 +475,8 @@ def fetch_crypto_news(coin_id='bitcoin', max_news=5):
     Returns:
     - list of dictionaries with news items (title, date, summary, url)
     """
-    # CoinDesk is a reliable source for crypto news
-    url = f"https://www.coindesk.com/search?s={coin_id}"
-    
-    try:
-        # Use requests to get the HTML content
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        }
-        response = requests.get(url, headers=headers)
-        if response.status_code != 200:
-            return get_demo_crypto_news(coin_id, max_news)
-            
-        # Use BeautifulSoup for parsing
-        soup = BeautifulSoup(response.content, 'html.parser')
-        
-        # Find all news article elements
-        articles = soup.find_all('article') 
-        # If not found, try different selectors
-        if not articles:
-            articles = soup.find_all('div', class_=lambda x: x and ('article' in str(x).lower() or 'card' in str(x).lower()))
-        
-        # If still no articles found, use demo data
-        if not articles:
-            return get_demo_crypto_news(coin_id, max_news)
-        
-        # Process the articles found by BeautifulSoup
-        news_items = []
-        for article in articles[:max_news]:
-            # Extract title
-            title_element = article.find(['h1', 'h2', 'h3', 'h4'], class_=lambda x: x and ('title' in x.lower() or 'heading' in x.lower()))
-            title = title_element.text.strip() if title_element else "Cryptocurrency News"
-            
-            # Extract date if available
-            date_element = article.find(['time', 'span'], class_=lambda x: x and ('date' in x.lower() or 'time' in x.lower()))
-            date = date_element.text.strip() if date_element else datetime.datetime.now().strftime('%Y-%m-%d')
-            
-            # Extract summary
-            summary_element = article.find(['p', 'div'], class_=lambda x: x and ('summary' in x.lower() or 'description' in x.lower()))
-            summary = summary_element.text.strip() if summary_element else "Read more about this cryptocurrency news."
-            
-            # Extract URL
-            url_element = article.find('a')
-            url = url_element['href'] if url_element and 'href' in url_element.attrs else f"https://www.coindesk.com/{coin_id}-news"
-            
-            # Add full domain if it's a relative URL
-            if url.startswith('/'):
-                url = f"https://www.coindesk.com{url}"
-            
-            news_items.append({
-                'title': title,
-                'date': date,
-                'summary': summary,
-                'url': url
-            })
-        
-        return news_items
-    
-    except Exception as e:
-        print(f"Error fetching cryptocurrency news: {e}")
-        return get_demo_crypto_news(coin_id, max_news)
+    # Use static demo news data for deployment
+    return get_demo_crypto_news(coin_id, max_news)
 
 def get_demo_crypto_news(coin_id='bitcoin', max_news=5):
     """Generate demo cryptocurrency news when API calls fail"""
