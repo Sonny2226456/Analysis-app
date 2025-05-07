@@ -3,6 +3,46 @@ import pandas as pd
 import numpy as np
 import datetime
 
+
+from data_sources import (
+    fetch_crypto_data, 
+    fetch_stock_data, 
+    fetch_weather_data, 
+    get_available_cryptos,
+    get_available_stocks,
+    get_available_cities,
+    fetch_crypto_news
+)
+from data_analysis import (
+    perform_trend_analysis, 
+    detect_patterns, 
+    predict_future_values
+)
+from visualizations import (
+    plot_time_series,
+    plot_correlation_matrix,
+    plot_distribution,
+    plot_candlestick,
+    plot_trend_indicators,
+    plot_forecast,
+    show_metrics_dashboard
+)
+from utils import (
+    process_uploaded_file,
+    generate_download_link,
+    calculate_statistics
+)
+
+# Initialize session state variables if they don't exist
+if 'crypto_data' not in st.session_state:
+    st.session_state.crypto_data = None
+if 'stock_data' not in st.session_state:
+    st.session_state.stock_data = None
+if 'weather_data' not in st.session_state:
+    st.session_state.weather_data = None
+if 'custom_data' not in st.session_state:
+    st.session_state.custom_data = None
+    
 # Set page configuration
 st.set_page_config(
     page_title="AI Data Analysis Dashboard",
