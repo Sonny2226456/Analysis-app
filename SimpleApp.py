@@ -34,8 +34,8 @@ if 'weather_data' not in st.session_state:
     st.session_state.weather_data = None
 if 'custom_data' not in st.session_state:
     st.session_state.custom_data = None
-if 'crypto_data' not in st.session_state or st.session_state.selected_crypto != crypto:
-    st.session_state.crypto_data = fetch_crypto_data(crypto, timeframe)
+if 'crypto_data' not in st.session_state or st.session_state.get("selected_crypto") != crypto:
+st.session_state.selected_crypto = crypto
 
     
 # Set page configuration
@@ -74,8 +74,12 @@ if data_source == "Cryptocurrency":
     col1, col2 = st.columns(2)
     with col1:
         st.subheader("Select Cryptocurrency")
+        #crypto = st.selectbox("Cryptocurrency", ["Bitcoin", "Ethereum", "Solana", "Cardano"])
         crypto = st.selectbox("Cryptocurrency", ["Bitcoin", "Ethereum", "Solana", "Cardano"])
-    
+        st.session_state.selected_crypto = crypto
+
+        
+        
     with col2:
         st.subheader("Select Timeframe")
         timeframe = st.selectbox("Timeframe", ["1 Day", "1 Week", "1 Month", "3 Months", "1 Year"])
