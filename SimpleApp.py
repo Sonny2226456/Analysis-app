@@ -35,7 +35,7 @@ if 'weather_data' not in st.session_state:
 if 'custom_data' not in st.session_state:
     st.session_state.custom_data = None
 if 'crypto_data' not in st.session_state or st.session_state.get("selected_crypto") != crypto:
-st.session_state.selected_crypto = crypto
+    st.session_state.selected_crypto = crypto
 
     
 # Set page configuration
