@@ -1,3 +1,4 @@
+
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -18,7 +19,15 @@ from data_analysis import (
     detect_patterns, 
     predict_future_values
 )
-
+from visualizations import (
+    plot_time_series,
+    plot_correlation_matrix,
+    plot_distribution,
+    plot_candlestick,
+    plot_trend_indicators,
+    plot_forecast,
+    show_metrics_dashboard
+)
 from utils import (
     process_uploaded_file,
     generate_download_link,
@@ -34,9 +43,6 @@ if 'weather_data' not in st.session_state:
     st.session_state.weather_data = None
 if 'custom_data' not in st.session_state:
     st.session_state.custom_data = None
-#if 'crypto_data' not in st.session_state or st.session_state.get("selected_crypto") != crypto:
- #   st.session_state.selected_crypto = crypto
-
     
 # Set page configuration
 st.set_page_config(
@@ -62,13 +68,7 @@ data_source = st.sidebar.selectbox(
 # Main content based on selected data source
 if data_source == "Cryptocurrency":
     st.header("Cryptocurrency Analysis")
-  # --- Put these at the top of the block ---
-    crypto = st.selectbox("Cryptocurrency", ["Bitcoin", "Ethereum", "Solana", "Cardano"])
-    timeframe = st.selectbox("Timeframe", ["1 Day", "1 Week", "1 Month", "3 Months", "1 Year"])
-
-    # Initialize or update session state
-    if 'selected_crypto' not in st.session_state or st.session_state.selected_crypto != crypto:
-        st.session_state.selected_crypto = crypto   
+    
     # Sample data for display
     crypto_data = pd.DataFrame({
         'Date': pd.date_range(start='2023-01-01', periods=30),
@@ -80,12 +80,8 @@ if data_source == "Cryptocurrency":
     col1, col2 = st.columns(2)
     with col1:
         st.subheader("Select Cryptocurrency")
-        #crypto = st.selectbox("Cryptocurrency", ["Bitcoin", "Ethereum", "Solana", "Cardano"])
         crypto = st.selectbox("Cryptocurrency", ["Bitcoin", "Ethereum", "Solana", "Cardano"])
-        st.session_state.selected_crypto = crypto
-
-        
-        
+    
     with col2:
         st.subheader("Select Timeframe")
         timeframe = st.selectbox("Timeframe", ["1 Day", "1 Week", "1 Month", "3 Months", "1 Year"])
