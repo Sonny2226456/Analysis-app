@@ -392,9 +392,12 @@ def plot_distribution(data, column, title):
     hist_values, bin_edges = np.histogram(df[column].dropna(), bins=50, density=True)
     bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
     
-    # Smooth the histogram
-    from scipy.ndimage import gaussian_filter1d
-    smoothed = gaussian_filter1d(hist_values, sigma=2)
+    # Simple smoothing using moving average instead of gaussian filter
+    def simple_moving_average(data, window_size=5):
+        weights = np.ones(window_size) / window_size
+        return np.convolve(data, weights, mode='same')
+    
+    smoothed = simple_moving_average(hist_values, window_size=5)
     
     # Scale the KDE to match histogram height
     max_hist = np.max(np.histogram(df[column].dropna(), bins=30)[0])
