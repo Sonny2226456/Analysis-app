@@ -34,8 +34,8 @@ if 'weather_data' not in st.session_state:
     st.session_state.weather_data = None
 if 'custom_data' not in st.session_state:
     st.session_state.custom_data = None
-if 'crypto_data' not in st.session_state or st.session_state.get("selected_crypto") != crypto:
-    st.session_state.selected_crypto = crypto
+#if 'crypto_data' not in st.session_state or st.session_state.get("selected_crypto") != crypto:
+ #   st.session_state.selected_crypto = crypto
 
     
 # Set page configuration
@@ -62,7 +62,13 @@ data_source = st.sidebar.selectbox(
 # Main content based on selected data source
 if data_source == "Cryptocurrency":
     st.header("Cryptocurrency Analysis")
-    
+  # --- Put these at the top of the block ---
+    crypto = st.selectbox("Cryptocurrency", ["Bitcoin", "Ethereum", "Solana", "Cardano"])
+    timeframe = st.selectbox("Timeframe", ["1 Day", "1 Week", "1 Month", "3 Months", "1 Year"])
+
+    # Initialize or update session state
+    if 'selected_crypto' not in st.session_state or st.session_state.selected_crypto != crypto:
+        st.session_state.selected_crypto = crypto   
     # Sample data for display
     crypto_data = pd.DataFrame({
         'Date': pd.date_range(start='2023-01-01', periods=30),
