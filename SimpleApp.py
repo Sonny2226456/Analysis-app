@@ -19,6 +19,15 @@ from data_analysis import (
     detect_patterns, 
     predict_future_values
 )
+from visualizations import (
+    plot_time_series,
+    plot_correlation_matrix,
+    plot_distribution,
+    plot_candlestick,
+    plot_trend_indicators,
+    plot_forecast,
+    show_metrics_dashboard
+)
 
 from utils import (
     process_uploaded_file,
@@ -79,6 +88,30 @@ with st.sidebar:
         value="1 Month"
     )
 
+ # Map time_range to actual days for API calls
+    time_map = {
+        "1 Day": 1,
+        "1 Week": 7,
+        "1 Month": 30,
+        "3 Months": 90,
+        "6 Months": 180,
+        "1 Year": 365
+    }
+    days = time_map[time_range]
+
+    st.header("Visualization Options")
+    chart_type = st.selectbox(
+        "Primary Chart Type",
+        ["Line Chart", "Candlestick", "Bar Chart", "Area Chart"]
+    )
+    
+    st.header("Download Options")
+    download_format = st.selectbox(
+        "Export Format",
+        ["CSV", "JSON", "Excel"]
+    )
+
+    
 # Main content based on selected data source
 if data_source == "Cryptocurrency":
     st.header("Cryptocurrency Analysis")
