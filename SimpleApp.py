@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import datetime
-import yfinance as yf
 
 
 
@@ -19,16 +18,6 @@ from data_analysis import (
     perform_trend_analysis, 
     detect_patterns, 
     predict_future_values
-)
-from data_loader import fetch_stock_data
-from visualizations import (
-    plot_time_series,
-    plot_correlation_matrix,
-    plot_distribution,
-    plot_candlestick,
-    plot_trend_indicators,
-    plot_forecast,
-    show_metrics_dashboard
 )
 
 from utils import (
@@ -53,12 +42,6 @@ st.set_page_config(
     page_icon="📊",
     layout="wide"
 )
-
-def fetch_stock_data(ticker: str, start_date: str = "2023-01-01", end_date: str = "2024-12-31") -> pd.DataFrame:
-    df = yf.download(ticker, start=start_date, end=end_date)
-    df.dropna(inplace=True)
-    return df
-
 
 # Page title and description
 st.title("AI Data Analysis Dashboard")
@@ -96,30 +79,6 @@ with st.sidebar:
         value="1 Month"
     )
 
- # Map time_range to actual days for API calls
-    time_map = {
-        "1 Day": 1,
-        "1 Week": 7,
-        "1 Month": 30,
-        "3 Months": 90,
-        "6 Months": 180,
-        "1 Year": 365
-    }
-    days = time_map[time_range]
-
-    st.header("Visualization Options")
-    chart_type = st.selectbox(
-        "Primary Chart Type",
-        ["Line Chart", "Candlestick", "Bar Chart", "Area Chart"]
-    )
-    
-    st.header("Download Options")
-    download_format = st.selectbox(
-        "Export Format",
-        ["CSV", "JSON", "Excel"]
-    )
-
-    
 # Main content based on selected data source
 if data_source == "Cryptocurrency":
     st.header("Cryptocurrency Analysis")
@@ -159,7 +118,15 @@ if data_source == "Cryptocurrency":
 
 elif data_source == "Stock Market":
     st.header("Stock Market Analysis")
-
+    
+    # Sample data
+    stock_data = pd.DataFrame({
+        'Date': pd.date_range(start='2023-01-01', periods=30),
+        'Price': [150 + 5*np.sin(i/3) + i*0.5 + np.random.randn() for i in range(30)],
+        'Volume': np.random.randint(1000000, 10000000, size=30)
+    })
+    
+    # Display options
     col1, col2 = st.columns(2)
     with col1:
         st.subheader("Select Stock")
@@ -167,68 +134,19 @@ elif data_source == "Stock Market":
     
     with col2:
         st.subheader("Select Timeframe")
-        timeframe = st.selectbox("Timeframe", ["1 Day", "1 Week", "1 Month", "3 Months", "6 Months", "1 Year"])
-
-    # Map timeframe to days
-    time_map = {
-        "1 Day": 1,
-        "1 Week": 7,
-        "1 Month": 30,
-        "3 Months": 90,
-        "6 Months": 180,
-        "1 Year": 365
-    }
-    days = time_map[timeframe]
-    end_date = datetime.datetime.today()
-    start_date = end_date - datetime.timedelta(days=days)
-
-    try:
-        # Fetch real data using yfinance
-        df = fetch_stock_data(stock, start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d'))
-
-        st.session_state.stock_data = df  # Save for reuse if needed
-
-        st.subheader(f"{stock} Historical Data")
-        st.dataframe(df.tail())
-
-        # Basic stats
-        st.subheader("Key Statistics")
-        latest_close = df["Close"].iloc[-1]
-        prev_close = df["Close"].iloc[-2] if len(df) > 1 else latest_close
-        change = latest_close - prev_close
-        pct_change = (change / prev_close * 100) if prev_close else 0
-        st.metric(label="Latest Close", value=f"${latest_close:.2f}", delta=f"{change:.2f} ({pct_change:.2f}%)")
-
-        # Plot selected chart
-        st.subheader("Stock Price Chart")
-        if chart_type == "Line Chart":
-            plot_time_series(df)
-        elif chart_type == "Candlestick":
-            plot_candlestick(df, stock)
-        elif chart_type == "Bar Chart":
-            plot_distribution(df)
-        elif chart_type == "Area Chart":
-            plot_trend_indicators(df)
-
-        # Run selected analyses
-        if "Trend Analysis" in analysis_type:
-            st.subheader("Trend Analysis")
-            trend_result = perform_trend_analysis(df)
-            st.write(trend_result)
-
-        if "Pattern Recognition" in analysis_type:
-            st.subheader("Pattern Detection")
-            pattern_result = detect_patterns(df)
-            st.write(pattern_result)
-
-        if "Forecasting" in analysis_type:
-            st.subheader("Forecasting")
-            forecast = predict_future_values(df)
-            plot_forecast(forecast)
-
-    except Exception as e:
-        st.error(f"Failed to fetch stock data: {e}")
-
+        timeframe = st.selectbox("Timeframe", ["1 Day", "1 Week", "1 Month", "3 Months", "1 Year"])
+    
+    # Display data
+    st.subheader(f"{stock} Data")
+    st.dataframe(stock_data)
+    
+    # Show stats
+    st.subheader("Statistics")
+    stats = pd.DataFrame({
+        'Metric': ['Current Price', 'Change (24h)', 'Market Cap', 'P/E Ratio'],
+        'Value': ['$165.23', '-0.42%', '$2.65T', '31.8']
+    })
+    st.table(stats)
     
     # Display trend insights
     st.subheader("AI Trend Analysis")
