@@ -50,12 +50,34 @@ st.markdown("""
     Select a data source from the sidebar to begin exploring data trends and insights.
 """)
 
-# Sidebar navigation
-st.sidebar.title("Navigation")
-data_source = st.sidebar.selectbox(
-    "Select Data Source",
-    ["Cryptocurrency", "Stock Market", "Weather", "Upload Custom Data"]
-)
+# Sidebar for data source selection and controls
+with st.sidebar:
+    st.header("Navigation")
+    if st.button("🏠 Home Dashboard"):
+        st.session_state.page = 'home'
+    
+    st.header("Data Sources")
+    data_source = st.radio(
+        "Select Data Source",
+        ["Cryptocurrency", "Stock Market", "Weather", "Custom Upload"]
+    )
+    # Update the page based on data source selection
+    st.session_state.page = data_source
+    
+    refresh_button = st.button("🔄 Refresh Data")
+    
+    st.header("Analysis Options")
+    analysis_type = st.multiselect(
+        "Select Analysis Types",
+        ["Trend Analysis", "Pattern Recognition", "Forecasting"],
+        default=["Trend Analysis"]
+    )
+    
+    time_range = st.select_slider(
+        "Time Range",
+        options=["1 Day", "1 Week", "1 Month", "3 Months", "6 Months", "1 Year"],
+        value="1 Month"
+    )
 
 # Main content based on selected data source
 if data_source == "Cryptocurrency":
