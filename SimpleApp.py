@@ -18,15 +18,7 @@ from data_analysis import (
     detect_patterns, 
     predict_future_values
 )
-from visualizations import (
-    plot_time_series,
-    plot_correlation_matrix,
-    plot_distribution,
-    plot_candlestick,
-    plot_trend_indicators,
-    plot_forecast,
-    show_metrics_dashboard
-)
+
 from utils import (
     process_uploaded_file,
     generate_download_link,
